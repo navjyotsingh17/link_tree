@@ -1,10 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { useSearchParams } from "next/navigation";
 
 const Generate = () => {
-
   const searchParams = useSearchParams();
 
   // const [link, setLink] = useState("")
@@ -13,6 +12,45 @@ const Generate = () => {
   const [handle, setHandle] = useState(searchParams.get("handle"));
   const [picture, setpicture] = useState("");
   const [description, setDescription] = useState("");
+  const [disable, setDisable] = useState(true);
+
+  useEffect(() => {
+    async function getData(params) {
+      const myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+
+      const raw = JSON.stringify({
+        handle: handle,
+      });
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow",
+      };
+
+      const r = await fetch(
+        `${process.env.NEXT_PUBLIC_HOST}/api/get`,
+        requestOptions
+      );
+      const result = await r.json();
+      if(result.success){
+        const links = result.result.links;
+        console.log(links)
+        if (!links) {
+          setDisable(true);
+        } else {
+          setDisable(false);
+        }
+      }
+      else{
+        setDisable(true);
+      }
+    }
+    console.log(handle)
+    getData();
+  }, []);
 
   const handleChange = (index, link, linktext) => {
     setLinks((initialLinks) => {
@@ -67,10 +105,19 @@ const Generate = () => {
     }
   };
 
+  const copyToClipboard = () => {
+    const link = `${process.env.NEXT_PUBLIC_HOST}/${handle}`;
+    navigator.clipboard.writeText(link).then(() => {
+      toast.success("Link copied to clipboard!");
+    }).catch(err => {
+      toast.error("Failed to copy link.");
+    });
+  };
+
   return (
     <div className="bg-[#225abf] min-h-screen grid grid-cols-2">
-      <div className="col1 flex items-center justify-center flex-col gap-3 text-gray-900 ml-28">
-        <div className="flex flex-col gap-5 my-2 w-[100%]">
+      <div className="col1 flex items-center justify-center flex-col gap-3 text-white ml-28">
+        <div className="flex flex-col gap-4 my-2 w-[100%] mt-16">
           <h1 className="font-bold text-5xl">Create your Link Tree</h1>
           <h1 className="font-bold text-xl">Step 1 : Claim your handle</h1>
           <input
@@ -85,30 +132,30 @@ const Generate = () => {
           </h1>
           {links &&
             links.map((item, index) => {
-                return (
+              return (
                 <div key={index} className="flex gap-2 items-center">
                   <input
-                  value={item.linktext || ""}
-                  onChange={(e) => {
-                    if (e.target.value.length <= 20) {
-                      handleChange(index, item.link, e.target.value);
-                    }
-                  }}
-                  className="p-2 focus:outline-[#225abf] w-1/2 rounded-xl text-black"
-                  type="text"
-                  placeholder="Enter link text"
+                    value={item.linktext || ""}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 20) {
+                        handleChange(index, item.link, e.target.value);
+                      }
+                    }}
+                    className="p-2 focus:outline-[#225abf] w-1/2 rounded-xl text-black"
+                    type="text"
+                    placeholder="Enter link text"
                   />
                   <input
-                  value={item.link || ""}
-                  onChange={(e) => {
-                    handleChange(index, e.target.value, item.linktext);
-                  }}
-                  className="p-2 focus:outline-[#225abf] w-1/2 rounded-xl text-black"
-                  type="text"
-                  placeholder="Enter link"
+                    value={item.link || ""}
+                    onChange={(e) => {
+                      handleChange(index, e.target.value, item.linktext);
+                    }}
+                    className="p-2 focus:outline-[#225abf] w-1/2 rounded-xl text-black"
+                    type="text"
+                    placeholder="Enter link"
                   />
                 </div>
-                );
+              );
             })}
           <button
             className="font-bold rounded-full bg-blue-400 hover:bg-blue-500 px-3 py-2 w-fit"
@@ -143,6 +190,13 @@ const Generate = () => {
           >
             Create your Linktree
           </button>
+          <button
+            disabled={disable}
+            className="disabled:bg-slate-500 font-semibold w-fit rounded-full bg-blue-400 hover:bg-blue-500 px-3 py-2"
+            onClick={() => copyToClipboard()}
+          >
+            Copy your Linktree link 🔗
+          </button>
         </div>
       </div>
       <div className="col2 w-full h-screen">
@@ -156,7 +210,5 @@ const Generate = () => {
     </div>
   );
 };
-
-
 
 export default Generate;

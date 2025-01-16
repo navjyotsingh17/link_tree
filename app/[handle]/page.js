@@ -45,12 +45,11 @@ export default async function Page({ params }) {
           {item.links.map((item, index) => {
             return (
               <Link href={item.link} target="_blank" key={index}>
-                {" "}
-                <div
-                  className="py-4 px-2 rounded-md bg-purple-100 min-w-96 flex justify-center shadow-lg"
-                >
-                  {item.linktext}
-                </div>{" "}
+              <div
+                className="py-4 px-2 rounded-md bg-purple-100 hover:bg-purple-200 hover:underline font-bold min-w-96 flex justify-center shadow-lg border border-purple-300 transition-transform transform hover:scale-105 hover:shadow-2xl"
+              >
+                {item.linktext}
+              </div>
               </Link>
             );
           })}
